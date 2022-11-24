@@ -23,6 +23,31 @@ paths:
             operationId: getnotes
             summary: List All notes
             description: Gets a list of all `note` entities.
+    '/notes/{id}':
+        delete:
+            tags:
+                - Notes
+            parameters:
+                - name: id
+                  description: Note ID
+                  in: path
+                  required: true
+            responses:
+                '204':
+                    description: Note deleted
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                            examples:
+                                Unauthorized:
+                                    value:
+                                        message: Unauthorized
+                    description: Unauthorized
+            security:
+                - Bearer: [ ]
+            summary: Delete a note
 components:
     schemas:
         note:
@@ -41,6 +66,19 @@ components:
                 createdAt: '1999-12-31 00:00:00'
                 title: string
                 content: string
+        error:
+            title: Root Type for error
+            description: ''
+            type: object
+            properties:
+                message:
+                    type: string
+            example:
+                message: String
+    securitySchemes:
+        Bearer:
+            scheme: bearer
+            type: http
 tags:
     - name: Notes
       description: ''
