@@ -3,26 +3,6 @@ info:
     title: notes
     version: 1.0.0
 paths:
-    /notes:
-        summary: Path used to manage the list of notes.
-        description: >-
-            The REST endpoint/path used to list and create zero or more `note` entities.  This path contains a
-            `GET` and `POST` operation to perform the list and create tasks, respectively.
-        get:
-            tags:
-                - Notes
-            responses:
-                '200':
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: '#/components/schemas/note'
-                    description: Successful response - returns an array of `note` entities.
-            operationId: getnotes
-            summary: List All notes
-            description: Gets a list of all `note` entities.
     '/notes/{id}':
         delete:
             tags:
@@ -48,11 +28,79 @@ paths:
             security:
                 - Bearer: [ ]
             summary: Delete a note
+    /notes:
+        summary: Path used to manage the list of notes.
+        description: >-
+            The REST endpoint/path used to list and create zero or more `note` entities.  This path contains a
+            `GET` and `POST` operation to perform the list and create tasks, respectively.
+        get:
+            tags:
+                - Notes
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/noteRequest'
+                    description: Successful response - returns an array of `note` entities.
+            operationId: getnotes
+            summary: List All notes
+            description: Gets a list of all `note` entities.
+        post:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/noteRequest'
+                required: true
+            tags:
+                - Notes
+            responses:
+                '201':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/noteResponse'
+                    description: Note created.
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorMissingFields'
+                    description: Some or all fields are missing
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                            examples:
+                                Unauthorized:
+                                    value:
+                                        message: Unauthorized
+                    description: Unauthorized
+            security:
+                - Bearer: [ ]
+            summary: Add new note.
 components:
     schemas:
-        note:
+        error:
+            title: Root Type for error
+            description: ''
+            type: object
+            properties:
+                message:
+                    type: string
+            example:
+                message: String
+        noteRequest:
             title: Root Type for note
             description: ''
+            required:
+                - content
+                - createdAt
+                - title
             type: object
             properties:
                 createdAt:
@@ -66,15 +114,40 @@ components:
                 createdAt: '1999-12-31 00:00:00'
                 title: string
                 content: string
-        error:
-            title: Root Type for error
+        noteResponse:
+            title: Root Type for note
+            description: ''
+            required:
+                - id
+                - content
+                - createdAt
+                - title
+            type: object
+            properties:
+                createdAt:
+                    format: date-time
+                    type: string
+                title:
+                    type: string
+                content:
+                    type: string
+                id:
+                    format: int32
+                    description: ''
+                    type: integer
+            example:
+                createdAt: '1999-12-31 00:00:00'
+                title: string
+                content: string
+        errorMissingFields:
+            title: Root Type for errorMissingFields
             description: ''
             type: object
             properties:
                 message:
                     type: string
             example:
-                message: String
+                message: Some or all fields are missing
     securitySchemes:
         Bearer:
             scheme: bearer

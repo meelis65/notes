@@ -14,6 +14,9 @@ app.get('/notes', (req, res) => {
     res.send(notes)
 })
 
+app.use(express.json());
+
+
 app.use(function (req, res, next) {
 
     const authHeader = req.headers.authorization;
@@ -45,5 +48,26 @@ app.delete("/notes/:id", requireLogin, (req, res) => {
     notes = notes.filter(note => note.id !== id);
     res.status(204).end();
 });
+
+app.post('/notes', requireLogin, (req, res) => {
+
+    // Check required fields
+    if (!req.body.title || !req.body.content) {
+        res.status(400).send({message: "Some or all fields are missing"});
+    }
+
+    // Create new note
+    const newNote = {
+        id: notes.reduce((acc, cur) => Math.max(acc, cur.id), 0) + 1,
+        createdAt: new Date().toISOString(),
+        title: req.body.title,
+        content: req.body.content
+
+    }
+
+    notes.push(newNote)
+
+    res.status(201).send(newNote)
+})
 
 app.listen(3000, () => console.log('http://localhost:3000/docs'))
