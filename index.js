@@ -55,19 +55,37 @@ app.post('/notes', requireLogin, (req, res) => {
     if (!req.body.title || !req.body.content) {
         res.status(400).send({message: "Some or all fields are missing"});
     }
+// reg body id
+    if (req.body.id) {
+        res.status(400).send({message: "Id is not allowed"});
 
-    // Create new note
-    const newNote = {
-        id: notes.reduce((acc, cur) => Math.max(acc, cur.id), 0) + 1,
-        createdAt: new Date().toISOString(),
-        title: req.body.title,
-        content: req.body.content
+
+        app.patch('/notes/:id', requireLogin, (req, res) => {
+            const id = parseInt(req.params.id);
+            const note = notes.find(note => note.id === id);
+            if (!note) {
+                return res.status(404).send({message: "Note not found"});
+            }
+            if (req.body.title) {
+                note.title = req.body.title;
+            }
+            if (req.body.content) {
+                note.content = req.body.content;
+            }
+            res.status(204).end();
+        })
+        // Create new note
+        const newNote = {
+            id: notes.reduce((acc, cur) => Math.max(acc, cur.id), 0) + 1,
+            createdAt: new Date().toISOString(),
+            title: req.body.title,
+            content: req.body.content
+
+        }
+        notes.push(newNote)
+
+        res.status(201).send(newNote)
 
     }
-
-    notes.push(newNote)
-
-    res.status(201).send(newNote)
 })
-
 app.listen(3000, () => console.log('http://localhost:3000/docs'))
