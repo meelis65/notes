@@ -4,14 +4,16 @@ info:
     version: 1.0.0
 paths:
     '/notes/{id}':
+        summary: notes/id
         delete:
             tags:
-                - Notes
+                - '/notes/{id}'
             parameters:
-                - name: id
-                  description: Note ID
-                  in: path
-                  required: true
+                -
+                    name: id
+                    description: Note ID
+                    in: path
+                    required: true
             responses:
                 '204':
                     description: Note deleted
@@ -26,8 +28,30 @@ paths:
                                         message: Unauthorized
                     description: Unauthorized
             security:
-                - Bearer: [ ]
+                -
+                    Bearer: []
             summary: Delete a note
+        patch:
+            tags:
+                - '/notes/{id}'
+            parameters:
+                -
+                    name: id
+                    description: Note ID
+                    schema:
+                        format: int32
+                        type: integer
+                    in: path
+                    required: true
+            responses:
+                '204':
+                    content:
+                        application/json: {}
+                    description: No content
+            security:
+                -
+                    Bearer: []
+            summary: Update a note
     /notes:
         summary: Path used to manage the list of notes.
         description: >-
@@ -35,7 +59,7 @@ paths:
             `GET` and `POST` operation to perform the list and create tasks, respectively.
         get:
             tags:
-                - Notes
+                - /notes
             responses:
                 '200':
                     content:
@@ -56,7 +80,7 @@ paths:
                             $ref: '#/components/schemas/noteRequest'
                 required: true
             tags:
-                - Notes
+                - /notes
             responses:
                 '201':
                     content:
@@ -81,7 +105,8 @@ paths:
                                         message: Unauthorized
                     description: Unauthorized
             security:
-                - Bearer: [ ]
+                -
+                    Bearer: []
             summary: Add new note.
 components:
     schemas:
@@ -153,5 +178,9 @@ components:
             scheme: bearer
             type: http
 tags:
-    - name: Notes
-      description: ''
+    -
+        name: /notes
+        description: ''
+    -
+        name: '/notes/{id}'
+        description: ''
