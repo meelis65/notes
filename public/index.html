@@ -15,18 +15,61 @@
             border: 1px solid black;
             border-radius: 5px;
             padding: 10px;
-            margin: 10px;
+            margin-top: 10px;
             background-color: #f0f0f0;
         }
     </style>
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
 </head>
 <body>
-<div id="app" v-cloak>
+<div id="app" class="container" v-cloak>
     <h1>Notes</h1>
+
+    <!-- Buttons for sign in, sign up and sign out -->
+    <div>
+        <button class="btn btn-success" v-if="!sessionId" @click="showModal('signInModal')">Sign In</button>
+        <button class="btn btn-danger" v-if="sessionId" @click="signOut">Sign Out</button>
+    </div>
+
     <div class="note" v-for="note in notes">
         <h2>{{note.title}}</h2>
         <p>{{note.content}}</p>
     </div>
+
+    <!-- Sign In Modal -->
+    <div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="signInModalLabel">Sign In</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 row">
+                        <label for="signInEmail" class="col-sm-2 col-form-label">Email</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="signInEmail" v-model="signInEmail">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="signInPassword" class="col-sm-2 col-form-label">Password</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" id="signInPassword" v-model="signInPassword">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="signIn">Sign in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </div>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script>
@@ -35,6 +78,10 @@
         data() {
             return {
                 notes: [],
+                modalHandler: null,
+                signInEmail: '',
+                signInPassword: '',
+                sessionId: null
             }
         },
         async mounted() {
@@ -57,8 +104,8 @@
                     } else {
                         let responseText = await response.text()
                         let responseObject = tryToParseJSON(responseText)
-                        if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
-                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                        if (typeof responseObject === 'object' && typeof responseObject.message === 'string') {
+                            alert('Error code ' + response.status + ":\n" + responseObject.message)
                         } else {
                             alert('Error code ' + response.status + ":\n" + responseText)
                         }
@@ -86,7 +133,38 @@
                     }).catch((error) => {
                         throw Error('Network error: ' + error);
                     });
-            }
+            },
+            clearStorageAndResetSessionId: function () {
+                localStorage.removeItem('sessionId')
+                this.sessionId = null
+            },
+            showModal: function (modalId) {
+                this.modalHandler = new bootstrap.Modal(document.getElementById(modalId), {
+                    keyboard: false
+                })
+                this.modalHandler.show();
+            },
+            signIn: async function () {
+                const response = await this.send('POST', '/sessions', {
+                    email: this.signInEmail,
+                    password: this.signInPassword
+                })
+                if (response.ok) {
+
+                    // Store the session id in the vue instance
+                    this.sessionId = response.body.sessionId
+
+                    // Store the session id in the local storage
+                    localStorage.setItem('sessionId', this.sessionId)
+
+                    // Hide the modal
+                    this.modalHandler.hide()
+
+                    // Reset the sign-in form
+                    this.signInEmail = ''
+                    this.signInPassword = ''
+                }
+            },
         }
     }).mount('#app')
 
@@ -101,5 +179,9 @@
         return false
     }
 </script>
+<!-- Bootstrap core JS-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+        integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
+        crossorigin="anonymous"></script>
 </body>
 </html>
