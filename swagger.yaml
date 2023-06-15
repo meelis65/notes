@@ -37,7 +37,6 @@ paths:
             parameters:
                 -
                     name: id
-                    description: Note ID
                     schema:
                         format: int32
                         type: integer
@@ -51,7 +50,7 @@ paths:
             security:
                 -
                     Bearer: []
-            summary: Update a note
+            summary: No content
     /notes:
         summary: Path used to manage the list of notes.
         description: >-
@@ -108,6 +107,31 @@ paths:
                 -
                     Bearer: []
             summary: Add new note.
+    /sessions:
+        summary: Path used to manage the list of sessions.
+        description: >-
+            The REST endpoint/path used to list and create zero or more `session` entities.  This path
+            contains a `GET` and `POST` operation to perform the list and create tasks, respectively.
+        post:
+            requestBody:
+                description: A new `session` to be created.
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/credentials'
+                required: true
+            tags:
+                - /sessions
+            responses:
+                '201':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/session'
+                    description: Successful response.
+            operationId: createsession
+            summary: Create a session
+            description: Creates a new instance of a `session`.
 components:
     schemas:
         error:
@@ -173,6 +197,28 @@ components:
                     type: string
             example:
                 message: Some or all fields are missing
+        session:
+            title: Root Type for session
+            description: ''
+            type: object
+            properties:
+                sessionId:
+                    format: int32
+                    type: integer
+            example:
+                sessionId: 7766536833627847
+        credentials:
+            title: Root Type for credentials
+            description: ''
+            type: object
+            properties:
+                email:
+                    type: string
+                password:
+                    type: string
+            example:
+                email: admin
+                password: password
     securitySchemes:
         Bearer:
             scheme: bearer
@@ -183,4 +229,7 @@ tags:
         description: ''
     -
         name: '/notes/{id}'
+        description: ''
+    -
+        name: /sessions
         description: ''

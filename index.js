@@ -5,6 +5,7 @@ const yamljs = require('yamljs')
 const swaggerDocument = yamljs.load('./swagger.yaml');
 const ERR_401 = {message: "Unauthorized"}
 
+let users = [{"id": 1, "email": "admin", "password": "password"}]
 let notes = [{"id": 1, "createdAt": "1999-12-31 00:00:00", "title": "string", "content": "string"}]
 let sessions = [{"id": 1, "userId": 1, "createdAt": "1999-12-31 00:00:00"}]
 
@@ -76,6 +77,40 @@ app.post('/notes', requireLogin, (req, res) => {
 
     res.status(201).send(newNote)
 
+})
+
+app.post('/sessions', (req, res) => {
+    // Validate request
+    if (!req.body.email || !req.body.password) {
+        return res.status(400).send({message: "Some or all fields are missing"});
+    }
+
+    // Check if user exists
+    const user = users.find(user => user.email === req.body.email);
+    if (!user) {
+        return res.status(404).send({message: "User not found"});
+    }
+
+    // Check if password is correct
+    if (user.password !== req.body.password) {
+        return res.status(400).send({message: "Invalid password"});
+    }
+
+    // Create a random session id using maximum value allowed for integer
+    const sessionId = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+
+    // Create new session
+    const newSession = {
+        id: sessionId,
+        userId: user.id,
+        createdAt: new Date().toISOString()
+    }
+
+    // Add session to sessions
+    sessions.push(newSession);
+
+    // Return session id
+    res.status(201).send({sessionId: sessionId});
 })
 
 app.patch('/notes/:id', requireLogin, (req, res) => {
