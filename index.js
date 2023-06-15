@@ -17,6 +17,9 @@ app.get('/notes', (req, res) => {
 app.use(express.json());
 
 
+// Serve static files
+app.use(express.static('public'));
+
 app.use(function (req, res, next) {
 
     const authHeader = req.headers.authorization;

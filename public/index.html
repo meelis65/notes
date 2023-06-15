@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Notes</title>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .note {
+            border: 1px solid black;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <h1>Notes</h1>
+    <div class="note" v-for="note in notes">
+        <h2>{{note.title}}</h2>
+        <p>{{note.content}}</p>
+    </div>
+</div>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+
+    const vue = Vue.createApp({
+        data() {
+            return {
+                notes: [],
+            }
+        },
+        async mounted() {
+
+            // Get the notes from the API and store them in the notes array
+            const response = await this.send('GET', '/notes')
+            if (response.ok) {
+                this.notes = response.body
+            }
+
+        },
+        methods: {
+            send: function (method, url, body) {
+                const vue = this;
+
+                async function CheckError(response) {
+                    if (response.status >= 200 && response.status <= 299) {
+                        let responseText = await response.text()
+                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
+                    } else {
+                        let responseText = await response.text()
+                        let responseObject = tryToParseJSON(responseText)
+                        if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
+                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                        } else {
+                            alert('Error code ' + response.status + ":\n" + responseText)
+                        }
+                        if (response.status === 401) {
+                            vue.clearStorageAndResetSessionId();
+                        }
+                        return {ok: false, status: response.status, body: responseObject || responseText}
+                    }
+                }
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                }
+                if (this.sessionId) {
+                    headers.Authorization = "Bearer " + this.sessionId
+                }
+                return fetch(url, {
+                    method: method,
+                    headers,
+                    body: JSON.stringify(body)
+                })
+                    .then(CheckError)
+                    .then((jsonResponse) => {
+                        return jsonResponse
+                    }).catch((error) => {
+                        throw Error('Network error: ' + error);
+                    });
+            }
+        }
+    }).mount('#app')
+
+    function tryToParseJSON(jsonString) {
+        try {
+            const o = JSON.parse(jsonString)
+            if (o && typeof o === "object") {
+                return o
+            }
+        } catch (e) {
+        }
+        return false
+    }
+</script>
+</body>
+</html>
