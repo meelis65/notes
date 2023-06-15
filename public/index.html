@@ -32,6 +32,8 @@
     <div>
         <button class="btn btn-success" v-if="!sessionId" @click="showModal('signInModal')">Sign In</button>
         <button class="btn btn-danger" v-if="sessionId" @click="signOut">Sign Out</button>
+        &nbsp;
+        <button class="btn btn-primary" v-if="sessionId" @click="showModal('addEditNoteModal')">Add Note</button>
     </div>
 
     <div class="note" v-for="note in notes">
@@ -69,7 +71,38 @@
         </div>
     </div>
 
-
+    <!-- Add/Edit Note Modal -->
+    <div class="modal fade" id="addEditNoteModal" tabindex="-1" aria-labelledby="addEditNoteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addEditNoteModalLabel">Add Note</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 row">
+                        <label for="addEditNoteTitle" class="col-sm-2 col-form-label">Name</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="addEditNoteTitle"
+                                   v-model="addEditNoteTitle">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="addEditNoteContent" class="col-sm-2 col-form-label">Description</label>
+                        <div class="col-sm-10">
+                                <textarea class="form-control" id="addEditNoteContent"
+                                          v-model="addEditNoteContent"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="addEditNote">Add Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script>
@@ -81,7 +114,12 @@
                 modalHandler: null,
                 signInEmail: '',
                 signInPassword: '',
-                sessionId: null
+                sessionId: null,
+                addEditNoteMode: 'add',
+                addEditNoteId: null,
+                addEditNoteTitle: '',
+                addEditNoteContent: '',
+
             }
         },
         async mounted() {
@@ -92,6 +130,13 @@
                 this.notes = response.body
             }
 
+            // Get the session ID from the local storage
+            this.sessionId = localStorage.getItem('sessionId')
+
+            // If there is no session ID, show the sign in modal
+            if (!this.sessionId) {
+                this.showModal('signInModal')
+            }
         },
         methods: {
             send: function (method, url, body) {
@@ -165,6 +210,20 @@
                     this.signInPassword = ''
                 }
             },
+            addEditNote: async function () {
+                if (this.addEditNoteMode === 'add') {
+                    const response = await this.send('POST', '/notes', {
+                        title: this.addEditNoteTitle,
+                        content: this.addEditNoteContent
+                    })
+                    if (response.ok) {
+                        this.notes.push(response.body)
+                        this.addEditNoteTitle = ''
+                        this.addEditNoteContent = ''
+                        this.modalHandler.hide()
+                    }
+                }
+            }
         }
     }).mount('#app')
 
