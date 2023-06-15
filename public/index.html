@@ -39,6 +39,7 @@
     <div class="note" v-for="note in notes">
         <h2>{{note.title}}</h2>
         <p>{{note.content}}</p>
+        <button class="btn btn-primary" @click="showAddEditModal('edit', note.id)">Edit Note</button>
     </div>
 
     <!-- Sign In Modal -->
@@ -77,7 +78,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="addEditNoteModalLabel">Add Note</h1>
+                    <h1 class="modal-title fs-5" id="addEditNoteModalLabel">{{ addEditNoteMode === 'add' ? 'Add' : 'Edit' }} Note</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -98,7 +99,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" @click="addEditNote">Add Note</button>
+                    <button type="button" class="btn btn-primary" @click="addEditNote">{{ addEditNoteMode === 'add' ? 'Add' : 'Edit' }} Note</button>
                 </div>
             </div>
         </div>
@@ -116,9 +117,9 @@
                 signInPassword: '',
                 sessionId: null,
                 addEditNoteMode: 'add',
-                addEditNoteId: null,
                 addEditNoteTitle: '',
                 addEditNoteContent: '',
+                currentNote: null,
 
             }
         },
@@ -189,6 +190,21 @@
                 })
                 this.modalHandler.show();
             },
+            showAddEditModal: function (mode, id) {
+                this.addEditNoteMode = mode
+
+                // Fill the form with the note data if we are in edit mode
+                if(mode === 'add') {
+                    this.addEditNoteTitle = ''
+                    this.addEditNoteContent = ''
+                } else {
+                    this.currentNote = this.notes.find(note => note.id === id)
+                    this.addEditNoteTitle = this.currentNote.title
+                    this.addEditNoteContent = this.currentNote.content
+                }
+
+                this.showModal('addEditNoteModal')
+            },
             signIn: async function () {
                 const response = await this.send('POST', '/sessions', {
                     email: this.signInEmail,
@@ -218,6 +234,18 @@
                     })
                     if (response.ok) {
                         this.notes.push(response.body)
+                        this.addEditNoteTitle = ''
+                        this.addEditNoteContent = ''
+                        this.modalHandler.hide()
+                    }
+                } else {
+                    const response = await this.send('PATCH', '/notes/' + this.currentNote.id, {
+                        title: this.addEditNoteTitle,
+                        content: this.addEditNoteContent
+                    })
+                    if (response.ok) {
+                        this.currentNote.title = this.addEditNoteTitle
+                        this.currentNote.content = this.addEditNoteContent
                         this.addEditNoteTitle = ''
                         this.addEditNoteContent = ''
                         this.modalHandler.hide()
