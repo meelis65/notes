@@ -129,10 +129,11 @@
                 }
             },
             async mounted() {
-
+                this.notes = JSON.parse(localStorage.getItem("notes"));
                 // Get the notes from the API and store them in the notes array
                 const response = await this.send('GET', '/notes')
                 if (response.ok) {
+                    localStorage.setItem("notes", JSON.stringify(response.body));
                     this.notes = response.body
                 }
 
@@ -268,6 +269,7 @@
                             this.notes = this.notes.filter(note => note.id !== message.data.id)
                             break
                     }
+                    localStorage.setItem("notes", JSON.stringify(this.notes));
                 }
             }
         }).mount('#app')

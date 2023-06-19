@@ -11,8 +11,8 @@ let notes = [{"id": 1, "createdAt": "1999-12-31 00:00:00", "title": "string", "c
 let sessions = [{"id": 1, "userId": 1, "createdAt": "1999-12-31 00:00:00"}]
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-app.get('/notes', (req, res) => {
+const delay = ms => new Promise(res => setTimeout(res, ms));
+app.get('/notes', async (req, res) => { await delay(1000);
     res.send(notes)
 })
 
