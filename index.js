@@ -4,7 +4,8 @@ const swaggerUi = require('swagger-ui-express');
 const yamljs = require('yamljs')
 const swaggerDocument = yamljs.load('./swagger.yaml');
 const ERR_401 = {message: "Unauthorized"}
-
+var expressWs = require('express-ws')(app);
+ 
 let users = [{"id": 1, "email": "admin", "password": "password"}]
 let notes = [{"id": 1, "createdAt": "1999-12-31 00:00:00", "title": "string", "content": "string"}]
 let sessions = [{"id": 1, "userId": 1, "createdAt": "1999-12-31 00:00:00"}]
@@ -34,6 +35,8 @@ app.use(function (req, res, next) {
     }
     next();
 })
+app.ws('/', function(ws, req) {
+});
 
 function requireLogin(req, res, next) {
     if (req.sessionId) {
@@ -50,6 +53,7 @@ app.delete("/notes/:id", requireLogin, (req, res) => {
         return res.status(404).send({message: "Note not found"});
     }
     notes = notes.filter(note => note.id !== id);
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'delete', data: note.id})));
     res.status(204).end();
 });
 
@@ -73,7 +77,11 @@ app.post('/notes', requireLogin, (req, res) => {
         content: req.body.content
     }
 
+
     notes.push(newNote)
+      expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'add', data: newNote})))
+      
+
 
     res.status(201).send(newNote)
 
@@ -125,6 +133,8 @@ app.patch('/notes/:id', requireLogin, (req, res) => {
     if (req.body.content) {
         note.content = req.body.content;
     }
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'edit', data: note})))
+  
     res.status(204).end();
 })
 
